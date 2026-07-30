@@ -1,35 +1,35 @@
 import React from 'react';
-import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command } from 'lucide-react';
+import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, Layers } from 'lucide-react';
 
 export const MISSION_PRESETS = [
   {
+    id: 'data-science-automation',
+    title: '⚡ Automated Python Data Cleaning & Profiling Pipeline',
+    category: 'Multi-Step Data Science',
+    prompt: 'Load raw sales anomaly CSV dataset from vector RAG memory, write a Python Pandas script to identify missing values and outliers, execute code in sandbox, calculate summary stats, and format clean output.',
+    toolsNeeded: ['vector_memory_rag', 'python_interpreter', 'api_request_json'],
+    estimatedSteps: 4
+  },
+  {
     id: 'renewable-energy',
-    title: '🌐 Autonomous RAG Market Synthesis',
-    category: 'Vector RAG & Search',
+    title: '🌐 Autonomous Tech Research & Competitor Benchmark',
+    category: 'Multi-Tool Web Synthesis',
     prompt: 'Perform multi-step RAG retrieval on solid-state EV battery advancements. Ingest verified vector memory chunks, execute Google search for 2026 press releases, run Python density calculations, and generate a non-hallucinating report.',
     toolsNeeded: ['vector_memory_rag', 'web_search_google', 'python_interpreter'],
     estimatedSteps: 4
   },
   {
-    id: 'data-pipeline',
-    title: '🐍 Automated Python Data Profiler',
-    category: 'Code Execution Sandbox',
-    prompt: 'Load the raw sales anomaly CSV dataset from vector RAG memory, write a Python Pandas script to identify missing values and outliers, execute code in sandbox, generate summary statistics, and save clean dataset.',
-    toolsNeeded: ['python_interpreter', 'vector_memory_rag', 'database_query'],
-    estimatedSteps: 3
-  },
-  {
     id: 'api-aggregator',
-    title: '📡 Real-Time Microservice API Integrator',
-    category: 'REST API & Vector RAG',
-    prompt: 'Perform multi-stage API integration to check current global weather anomaly alerts for agricultural zones, cross-reference RAG vector database, compute risk matrix, and trigger notification payload.',
+    title: '📡 Real-Time Microservice & API Orchestrator',
+    category: 'REST API & RAG Automation',
+    prompt: 'Perform multi-stage API integration to check current global weather anomaly alerts for agricultural zones, cross-reference RAG vector database, compute risk matrix in Python sandbox, and dispatch notification payload.',
     toolsNeeded: ['api_request_json', 'database_query', 'python_interpreter'],
     estimatedSteps: 4
   },
   {
     id: 'security-auditor',
-    title: '🛡️ Gemma Security & Guardrails Auditor',
-    category: 'RAG Safety Audit',
+    title: '🛡️ Automated Code Vulnerability & Guardrails Audit',
+    category: 'Security Remediation',
     prompt: 'Inspect target repository code snippet for SQL injection vulnerabilities and prompt leakage vulnerabilities. Execute static analysis tool, test edge case inputs in python sandbox, and formulate remediation diff.',
     toolsNeeded: ['python_interpreter', 'vector_memory_rag'],
     estimatedSteps: 3
@@ -68,8 +68,8 @@ export default function AgentControlPanel({
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900 tracking-tight">Agent Prompt & RAG Mission Control</h2>
-            <p className="text-xs text-slate-500">Specify agent objectives, configure active tools, and set ReAct reasoning budgets</p>
+            <h2 className="text-sm font-bold text-slate-900 tracking-tight">Automated Multi-Step Task Control</h2>
+            <p className="text-xs text-slate-500">Instruct Gemma 4 to autonomously plan, execute tools, and automate complex workflows</p>
           </div>
         </div>
 
@@ -91,11 +91,11 @@ export default function AgentControlPanel({
             {isRunning ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Executing Agent & RAG...
+                Automating Task...
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5 fill-current" /> Execute Mission
+                <Play className="w-3.5 h-3.5 fill-current" /> Execute Automated Mission
               </>
             )}
           </button>
@@ -105,7 +105,7 @@ export default function AgentControlPanel({
       {/* Preset Selector */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-          <span>Preset Workflow Starters:</span>
+          <span>Automated Multi-Step Workflows:</span>
           <span className="text-[10px] text-slate-400 flex items-center gap-1">
             <Command className="w-3 h-3" /> Press Ctrl + Enter to run
           </span>
@@ -128,8 +128,8 @@ export default function AgentControlPanel({
                 <div className="text-[10px] text-slate-500 mt-0.5">{preset.category}</div>
               </div>
               <div className="flex items-center justify-between text-[10px] text-indigo-600 font-mono">
-                <span>{preset.estimatedSteps} Steps</span>
-                <span className="text-emerald-600 font-bold">RAG Vector Ready</span>
+                <span>{preset.estimatedSteps} ReAct Steps</span>
+                <span className="text-emerald-600 font-bold">Automated</span>
               </div>
             </button>
           ))}
@@ -143,7 +143,7 @@ export default function AgentControlPanel({
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isRunning}
-          placeholder="Describe your complex multi-step RAG mission for Gemma Agent..."
+          placeholder="Describe your complex multi-step task for Gemma 4 to automate (e.g. 'Load dataset from RAG, clean null values with Python, and format summary statistics')..."
           rows={3}
           className="w-full glass-input p-3.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 resize-none font-mono focus:ring-2 focus:ring-blue-500 leading-relaxed"
         />
@@ -154,7 +154,7 @@ export default function AgentControlPanel({
         
         {/* Active Tools */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-slate-500 font-semibold">Active Tools:</span>
+          <span className="text-slate-500 font-semibold">Automated Tools:</span>
 
           <button
             onClick={() => toggleTool('vector_memory_rag')}
@@ -204,7 +204,7 @@ export default function AgentControlPanel({
         {/* Sliders & Memory */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-slate-600 font-semibold">ReAct Steps: <strong className="text-blue-600 font-mono">{maxSteps}</strong></span>
+            <span className="text-slate-600 font-semibold">Max ReAct Steps: <strong className="text-blue-600 font-mono">{maxSteps}</strong></span>
             <input
               type="range"
               min={1}
