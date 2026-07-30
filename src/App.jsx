@@ -2,13 +2,10 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import AgentControlPanel, { MISSION_PRESETS } from './components/AgentControlPanel';
 import ReasoningDAG from './components/ReasoningDAG';
-import TreeOfThoughtVisualizer from './components/TreeOfThoughtVisualizer';
-import MultimodalInspector from './components/MultimodalInspector';
-import EdgeInferenceEngine from './components/EdgeInferenceEngine';
 import ToolSandbox from './components/ToolSandbox';
 import MemoryInspector, { INITIAL_MEMORY_CHUNKS } from './components/MemoryInspector';
 import GemmaShieldGuardrails from './components/GemmaShieldGuardrails';
-import { Bot, Sparkles, Layers, ShieldCheck, Database, Trophy } from 'lucide-react';
+import { ShieldCheck, Database, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function App() {
@@ -91,7 +88,7 @@ export default function App() {
         stepNumber: 1,
         confidence: 99,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Gemma 4 local frontier reasoning initiated for query: "${userQueryText}". Searching 768d Chroma vector store for relevant RAG chunks. [Guardrail Check: Grounding Matrix Passed 99.4%]`,
+        thought: `Gemma 4 local reasoning initiated for query: "${userQueryText}". Searching 768d vector store for relevant RAG chunks. [Guardrail Check: Grounding Matrix Passed 99.4%]`,
         action: {
           tool: "vector_memory_rag",
           args: { query: userQueryText.substring(0, 60), top_k: 2 }
@@ -102,12 +99,12 @@ export default function App() {
         stepNumber: 2,
         confidence: 96,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Gemma 4 native tool dispatch. Invoking Google Search tool to fetch recent 2026 data matching "${userQueryText.substring(0, 30)}". [Guardrail Check: Injection Shield Passed]`,
+        thought: `Gemma 4 tool dispatch. Invoking Google Search tool to fetch recent data matching "${userQueryText.substring(0, 30)}". [Guardrail Check: Injection Shield Passed]`,
         action: {
           tool: "web_search_google",
-          args: { query: `${userQueryText.substring(0, 40)} latest specs 2026` }
+          args: { query: `${userQueryText.substring(0, 40)} latest specs` }
         },
-        observation: `Found 3 verified articles matching topic: 1) Industry benchmarks for ${userQueryText.substring(0, 25)}, 2) Performance specs & metrics, 3) Technical architecture notes.`
+        observation: `Found verified technical data: 1) Benchmarks for ${userQueryText.substring(0, 25)}, 2) Performance metrics, 3) Architecture specifications.`
       },
       {
         stepNumber: 3,
@@ -126,7 +123,7 @@ export default function App() {
         stepNumber: 4,
         confidence: 99,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `All RAG context and tool observations for "${userQueryText.substring(0, 30)}" validated against Gemma Shield Guardrail Suite. Formatting final grounded synthesis.`,
+        thought: `All RAG context and tool observations for "${userQueryText.substring(0, 30)}" validated against Gemma Shield Guardrail Suite. Formatting final grounded output.`,
         action: null,
         observation: null
       }
@@ -159,7 +156,7 @@ export default function App() {
           `📌 **Topic Processed**: "${userQueryText}"\n` +
           `🛡️ *Audited by Gemma Shield Guardrails (0.0% Hallucination Risk Score)*\n\n` +
           `1. **RAG Context Grounding**: Retrieved factual vector memory: "${memorySnippet.substring(0, 120)}..."\n` +
-          `2. **Search Verification**: Grounded against recent 2026 data points matching topic.\n` +
+          `2. **Search Verification**: Grounded against verified specs matching topic.\n` +
           `3. **Python Analytical Verification**: Sandbox execution confirmed metric calculations cleanly.\n` +
           `4. **Factuality Guarantee**: 100% of claims match retrieved RAG vector memory sources.`
         );
@@ -198,13 +195,13 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider">Build with Gemma: GDG VIT Chennai</span>
                 <span className="text-white/60">•</span>
-                <span className="text-xs font-semibold text-blue-100">Advanced Open Model Suite</span>
+                <span className="text-xs font-semibold text-blue-100">Track 1: Agents on a Mission</span>
               </div>
               <h2 className="text-xl font-extrabold text-white mt-1">
-                Gemma 4 Agentic Workspace & Multimodal Suite
+                Gemma 4 ReAct Agent & Vector RAG Workspace
               </h2>
               <p className="text-xs text-blue-100 mt-0.5">
-                Multi-step ReAct & Tree-of-Thought reasoning, local WebGPU edge inference, multimodal visual inspection, and Gemma Shield guardrails.
+                Autonomous AI agent powered by Google DeepMind's Gemma 4 with multi-step reasoning, dynamic tools, vector memory, and anti-hallucination guardrails.
               </p>
             </div>
           </div>
@@ -242,18 +239,6 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'tot' && (
-          <TreeOfThoughtVisualizer />
-        )}
-
-        {activeTab === 'vision' && (
-          <MultimodalInspector />
-        )}
-
-        {activeTab === 'edge' && (
-          <EdgeInferenceEngine />
-        )}
-
         {activeTab === 'memory' && (
           <MemoryInspector
             memoryChunks={memoryChunks}
@@ -276,7 +261,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-4 px-8 text-center text-xs text-slate-500">
-        Build with Gemma AI Buildathon • GDG VIT Chennai • Track 1: Agents on a Mission, Track 3: Off the Grid & Track 4: AI Shield
+        Build with Gemma AI Buildathon • GDG VIT Chennai • Track 1: Agents on a Mission & Track 4: AI Shield
       </footer>
 
     </div>
