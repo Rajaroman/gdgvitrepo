@@ -7,7 +7,6 @@ import MemoryInspector, { INITIAL_MEMORY_CHUNKS } from './components/MemoryInspe
 import GemmaShieldGuardrails from './components/GemmaShieldGuardrails';
 import { realVectorSearch, realExecutePythonCode, realAuditFactuality } from './utils/realAgentEngine';
 import { Bot, Sparkles, Layers, ShieldCheck, Database, Trophy } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 export default function App() {
   const [selectedModel, setSelectedModel] = useState('gemma-4-9b-it');
@@ -174,12 +173,6 @@ export default function App() {
             `   ${realPythonOutput.stdout.split('\n')[0]}\n` +
             `3. **Factuality & Safety Verification**: 100% of claims match real retrieved vector memory sources.`
           );
-
-          confetti({
-            particleCount: 100,
-            spread: 80,
-            origin: { y: 0.5 }
-          });
         }
       }
     }, 1100);
