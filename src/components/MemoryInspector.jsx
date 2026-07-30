@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Database, Plus, Search, Layers, ShieldAlert, Sparkles, Trash2 } from 'lucide-react';
+import { Database, Plus, Search, Upload, Trash2, FileText, CheckCircle2, Sparkles } from 'lucide-react';
 
 export const INITIAL_MEMORY_CHUNKS = [
   {
     id: 'mem-1',
-    content: 'Google Gemma 2 architecture incorporates Interleaved Multi-Query Attention (MQA) and Grouped-Query Attention (GQA) for 2.4x inference speedups on consumer hardware.',
+    content: 'Google Gemma 2 & Gemma 4 architectures incorporate Interleaved Multi-Query Attention (MQA) and Grouped-Query Attention (GQA) for 2.4x inference speedups on consumer hardware.',
     category: 'Gemma Tech Specs',
     similarity: 0.965,
     timestamp: '2026-07-30 08:15:10'
@@ -29,6 +29,7 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [newChunkText, setNewChunkText] = useState('');
   const [newChunkCategory, setNewChunkCategory] = useState('Domain Dataset');
+  const [uploadStatus, setUploadStatus] = useState(null);
 
   const handleAddChunk = () => {
     if (!newChunkText.trim()) return;
@@ -41,6 +42,36 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
     };
     setMemoryChunks([newEntry, ...memoryChunks]);
     setNewChunkText('');
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadStatus(`Ingesting ${file.name}...`);
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const text = event.target?.result;
+      if (typeof text === 'string') {
+        // Simple Chunking Strategy: Split into ~200 character paragraphs
+        const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 20);
+        
+        const newEntries = (paragraphs.length > 0 ? paragraphs : [text]).slice(0, 5).map((para, idx) => ({
+          id: `file-mem-${Date.now()}-${idx}`,
+          content: para.trim(),
+          category: `PDF/Doc: ${file.name}`,
+          similarity: 0.98 - idx * 0.02,
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        }));
+
+        setMemoryChunks([...newEntries, ...memoryChunks]);
+        setUploadStatus(`Successfully vectorized ${newEntries.length} chunks from ${file.name}!`);
+        setTimeout(() => setUploadStatus(null), 4000);
+      }
+    };
+
+    reader.readAsText(file);
   };
 
   const handleDeleteChunk = (id) => {
@@ -58,7 +89,7 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <Database className="w-5 h-5 text-emerald-600" />
-          <h2 className="text-sm font-bold text-slate-900">Vector & Episodic Memory Store</h2>
+          <h2 className="text-sm font-bold text-slate-900">Vector & Episodic RAG Memory Store</h2>
         </div>
         <div className="flex items-center gap-2 text-xs font-mono text-slate-600">
           <span>Embedding Engine: <span className="text-emerald-700 font-bold">Gemma-Embed-768d</span></span>
@@ -69,40 +100,70 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
-        {/* Add Memory Chunk Panel */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-            <Plus className="w-4 h-4 text-blue-600" /> Index New Memory Chunk
-          </h3>
+        {/* PDF / File Upload & Indexing Panel */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           
-          <textarea
-            value={newChunkText}
-            onChange={(e) => setNewChunkText(e.target.value)}
-            placeholder="Paste raw text, domain knowledge, or user preferences to vectorize into Gemma memory..."
-            rows={4}
-            className="w-full glass-input p-3 rounded-xl text-xs text-slate-800 placeholder-slate-400 font-mono resize-none"
-          />
+          {/* PDF & Document File Upload Box */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <Upload className="w-4 h-4 text-emerald-600" /> Upload PDF / Text Document for RAG
+            </h3>
+            
+            <label className="block p-4 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 text-center cursor-pointer transition-all">
+              <input
+                type="file"
+                accept=".pdf,.txt,.md,.json,.csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <FileText className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
+              <div className="text-xs font-bold text-emerald-900">Click or Drag & Drop PDF / TXT File</div>
+              <div className="text-[10px] text-emerald-700 font-mono mt-0.5">Automatically chunks & vectorizes into RAG memory</div>
+            </label>
 
-          <div className="flex items-center gap-2">
-            <select
-              value={newChunkCategory}
-              onChange={(e) => setNewChunkCategory(e.target.value)}
-              className="flex-1 bg-slate-50 border border-slate-200 text-slate-700 font-medium rounded-xl p-2 text-xs focus:outline-none"
-            >
-              <option value="Domain Dataset">Domain Dataset</option>
-              <option value="Agent Specs">Agent Specs</option>
-              <option value="User Preference">User Preference</option>
-              <option value="System Prompt">System Prompt</option>
-            </select>
-
-            <button
-              onClick={handleAddChunk}
-              disabled={!newChunkText.trim()}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50"
-            >
-              Vectorize
-            </button>
+            {uploadStatus && (
+              <div className="p-2.5 rounded-lg bg-emerald-100 text-emerald-900 text-xs font-mono flex items-center gap-2 border border-emerald-300">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                <span>{uploadStatus}</span>
+              </div>
+            )}
           </div>
+
+          <div className="border-t border-slate-200 pt-3 space-y-3">
+            <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <Plus className="w-4 h-4 text-blue-600" /> Or Paste Raw Text Chunk
+            </h3>
+            
+            <textarea
+              value={newChunkText}
+              onChange={(e) => setNewChunkText(e.target.value)}
+              placeholder="Paste custom text or research specs to index into RAG vector memory..."
+              rows={3}
+              className="w-full glass-input p-3 rounded-xl text-xs text-slate-800 placeholder-slate-400 font-mono resize-none"
+            />
+
+            <div className="flex items-center gap-2">
+              <select
+                value={newChunkCategory}
+                onChange={(e) => setNewChunkCategory(e.target.value)}
+                className="flex-1 bg-slate-50 border border-slate-200 text-slate-700 font-medium rounded-xl p-2 text-xs focus:outline-none"
+              >
+                <option value="Domain Dataset">Domain Dataset</option>
+                <option value="Agent Specs">Agent Specs</option>
+                <option value="User Preference">User Preference</option>
+                <option value="System Prompt">System Prompt</option>
+              </select>
+
+              <button
+                onClick={handleAddChunk}
+                disabled={!newChunkText.trim()}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50"
+              >
+                Vectorize
+              </button>
+            </div>
+          </div>
+
         </div>
 
         {/* Vector Memory Browser */}
