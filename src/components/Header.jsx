@@ -22,11 +22,11 @@ export default function Header({ selectedModel, setSelectedModel, activeTab, set
                 Gemma 4 Studio <span className="text-xs font-normal text-slate-500">GDG VIT Chennai</span>
               </h1>
               <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-blue-600" /> Agentic AI Active
+                <Sparkles className="w-3 h-3 text-blue-600" /> Agents on a Mission
               </span>
             </div>
             <p className="text-[11px] text-slate-500">
-              Autonomous Agentic ReAct Engine • Python Sandbox • Vector RAG • Fact-Grounding Shield
+              Autonomous ReAct Loop • Python Sandbox • Cross-Session RAG Memory • Fact-Grounding Shield
             </p>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function Header({ selectedModel, setSelectedModel, activeTab, set
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" /> Agentic AI ReAct
+            <Layers className="w-3.5 h-3.5" /> ReAct Agent & RAG
           </button>
 
           <button
@@ -52,7 +52,7 @@ export default function Header({ selectedModel, setSelectedModel, activeTab, set
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            <Database className="w-3.5 h-3.5" /> RAG Knowledge Store
+            <Database className="w-3.5 h-3.5" /> Cross-Session Memory
           </button>
 
           <button
@@ -87,9 +87,9 @@ export default function Header({ selectedModel, setSelectedModel, activeTab, set
               onChange={(e) => setSelectedModel(e.target.value)}
               className="bg-transparent text-slate-800 font-bold focus:outline-none cursor-pointer text-xs"
             >
+              <option value="gemma-4-31b-it" className="bg-white text-slate-800">Gemma 4-31B Dense (Recommended)</option>
+              <option value="gemma-4-26b-moe" className="bg-white text-slate-800">Gemma 4-26B A4B MoE</option>
               <option value="gemma-4-9b-it" className="bg-white text-slate-800">Gemma 4-9B Instruct</option>
-              <option value="gemma-4-27b-it" className="bg-white text-slate-800">Gemma 4-27B Heavy</option>
-              <option value="gemma-4-e2e-agent" className="bg-white text-slate-800">Gemma 4 Native Agent</option>
             </select>
           </div>
 

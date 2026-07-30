@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import uuid
 import math
 from typing import List, Dict, Any, Optional
@@ -14,12 +15,16 @@ try:
 except ImportError:
     PdfReader = None
 
+PERSISTENT_MEMORY_FILE = os.path.join(os.path.dirname(__file__), "memory_db.json")
+
 class InMemoryVectorStore:
     def __init__(self):
-        self.documents: List[Dict[str, Any]] = [] # [{file_id, chunk_id, text, metadata, embedding}]
+        self.documents: List[Dict[str, Any]] = [] # [{session_id, file_id, chunk_id, text, metadata, embedding}]
+        self.session_summaries: List[Dict[str, Any]] = [] # [{session_id, goal, summary, timestamp, embedding}]
         self.csv_tables: Dict[str, Any] = {} # {file_id: DataFrame}
         self.encoder = None
         self._init_encoder()
+        self._load_persistent_memory()
 
     def _init_encoder(self):
         """Initializes sentence-transformers or fallback TF-IDF vectorizer."""
@@ -35,13 +40,11 @@ class InMemoryVectorStore:
         if self.encoder:
             return self.encoder.encode(text).tolist()
         
-        # Word frequency term-vector fallback
         words = re.findall(r'\w+', text.lower())
         freqMap = {}
         for w in words:
             freqMap[w] = freqMap.get(w, 0) + 1
         
-        # Normalize pseudo-vector
         norm = math.sqrt(sum(v*v for v in freqMap.values())) or 1.0
         return [round(v / norm, 4) for v in list(freqMap.values())[:384]]
 
@@ -54,8 +57,31 @@ class InMemoryVectorStore:
         norm2 = math.sqrt(sum(x * x for x in vec2[:min_len])) or 1.0
         return dot_product / (norm1 * norm2)
 
+    def _save_persistent_memory(self):
+        """Persists cross-session vector embeddings to local JSON file for retrieval across sessions."""
+        try:
+            data = {
+                "documents": self.documents,
+                "session_summaries": self.session_summaries
+            }
+            with open(PERSISTENT_MEMORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"Error saving persistent memory: {e}")
+
+    def _load_persistent_memory(self):
+        """Loads cross-session vector embeddings from local JSON file."""
+        if os.path.exists(PERSISTENT_MEMORY_FILE):
+            try:
+                with open(PERSISTENT_MEMORY_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.documents = data.get("documents", [])
+                    self.session_summaries = data.get("session_summaries", [])
+                    print(f"Loaded {len(self.documents)} persistent document chunks and {len(self.session_summaries)} cross-session memory summaries.")
+            except Exception as e:
+                print(f"Error loading persistent memory: {e}")
+
     def chunk_text(self, text: str, chunk_size_words: int = 400, overlap_words: int = 50) -> List[str]:
-        """Chunks text into ~500 token blocks with ~50 token overlap."""
         words = text.split()
         if len(words) <= chunk_size_words:
             return [text]
@@ -69,8 +95,7 @@ class InMemoryVectorStore:
             start += (chunk_size_words - overlap_words)
         return chunks
 
-    def ingest_pdf(self, file_bytes: bytes, filename: str) -> Dict[str, Any]:
-        """Extracts text from PDF, chunks (~500 tokens, 50 overlap), embeds, and stores in vector index."""
+    def ingest_pdf(self, file_bytes: bytes, filename: str, session_id: str = "default") -> Dict[str, Any]:
         file_id = f"doc_{uuid.uuid4().hex[:8]}"
         extracted_text = ""
 
@@ -86,12 +111,12 @@ class InMemoryVectorStore:
             extracted_text = file_bytes.decode('utf-8', errors='ignore')
 
         chunks = self.chunk_text(extracted_text)
-        added_chunks = []
 
         for idx, chunk_text in enumerate(chunks):
             chunk_id = f"{file_id}_c{idx+1}"
             emb = self._compute_embedding(chunk_text)
             doc_entry = {
+                "session_id": session_id,
                 "file_id": file_id,
                 "chunk_id": chunk_id,
                 "filename": filename,
@@ -99,7 +124,8 @@ class InMemoryVectorStore:
                 "embedding": emb
             }
             self.documents.append(doc_entry)
-            added_chunks.append(doc_entry)
+
+        self._save_persistent_memory()
 
         return {
             "file_id": file_id,
@@ -108,8 +134,7 @@ class InMemoryVectorStore:
             "file_type": "pdf"
         }
 
-    def ingest_csv(self, file_bytes: bytes, filename: str) -> Dict[str, Any]:
-        """Stores DataFrame keyed by file_id for profile_csv to use directly."""
+    def ingest_csv(self, file_bytes: bytes, filename: str, session_id: str = "default") -> Dict[str, Any]:
         file_id = f"csv_{uuid.uuid4().hex[:8]}"
         import io
 
@@ -118,16 +143,18 @@ class InMemoryVectorStore:
                 df = pd.read_csv(io.BytesIO(file_bytes))
                 self.csv_tables[file_id] = df
                 
-                # Also store summary chunk in vector store for semantic queries
-                summary_text = f"CSV File '{filename}': {len(df)} rows, {len(df.columns)} columns: {list(df.columns)}"
+                summary_text = f"CSV File '{filename}' (Session: {session_id}): {len(df)} rows, {len(df.columns)} columns: {list(df.columns)}"
                 emb = self._compute_embedding(summary_text)
                 self.documents.append({
+                    "session_id": session_id,
                     "file_id": file_id,
                     "chunk_id": f"{file_id}_summary",
                     "filename": filename,
                     "text": summary_text,
                     "embedding": emb
                 })
+
+                self._save_persistent_memory()
 
                 return {
                     "file_id": file_id,
@@ -141,8 +168,38 @@ class InMemoryVectorStore:
         else:
             return {"file_id": file_id, "error": "Pandas library not installed on server."}
 
+    def save_session_memory(self, session_id: str, goal: str, summary: str):
+        """Persists session goal and summary for cross-session memory retrieval."""
+        emb = self._compute_embedding(f"Session Goal: {goal} | Summary: {summary}")
+        entry = {
+            "session_id": session_id,
+            "goal": goal,
+            "summary": summary,
+            "timestamp": pd.Timestamp.now().isoformat() if pd else "2026-07-30",
+            "embedding": emb
+        }
+        self.session_summaries.append(entry)
+        self._save_persistent_memory()
+
+    def query_cross_session_memory(self, query: str, top_k: int = 2) -> List[Dict[str, Any]]:
+        """Retrieves prior session summaries keyed by user/session across historical tasks."""
+        if not self.session_summaries:
+            return []
+        
+        query_emb = self._compute_embedding(query)
+        scored = []
+        for s in self.session_summaries:
+            sim = self._cosine_similarity(query_emb, s["embedding"])
+            scored.append({
+                "session_id": s["session_id"],
+                "goal": s["goal"],
+                "summary": s["summary"],
+                "similarity_score": round(sim, 4)
+            })
+        scored.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return scored[:top_k]
+
     def query_documents(self, query: str, file_id: Optional[str] = None, top_k: int = 3) -> List[Dict[str, Any]]:
-        """Retrieves top-k relevant chunks via cosine similarity."""
         if not self.documents:
             return []
 
@@ -164,5 +221,4 @@ class InMemoryVectorStore:
         scored.sort(key=lambda x: x["similarity_score"], reverse=True)
         return scored[:top_k]
 
-# Global singleton vector store instance
 global_vector_store = InMemoryVectorStore()

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, FileSpreadsheet, Download, CheckCircle2 } from 'lucide-react';
+import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, FileSpreadsheet, Download, CheckCircle2, Rocket } from 'lucide-react';
 
 export const MISSION_PRESETS = [
   {
@@ -68,6 +68,14 @@ export default function AgentControlPanel({
     setPrompt(`Analyze attached CSV dataset "${file.name}" from RAG memory, write a Python Pandas script to inspect columns, clean missing values, identify numerical outliers, and compute summary statistics.`);
   };
 
+  const handleRunDemoTask = () => {
+    setAttachedCsvName('sample_sales_data.csv');
+    setPrompt('Given attached sales CSV dataset, profile columns, run Python anomaly detection script to flag high-value outlier transactions ($500.00+), perform web search for regional market benchmarks, and compile executive PDF summary report.');
+    setTimeout(() => {
+      onRunMission();
+    }, 100);
+  };
+
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
       
@@ -79,12 +87,22 @@ export default function AgentControlPanel({
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 tracking-tight">Automated Multi-Step Task Control</h2>
-            <p className="text-xs text-slate-500">Instruct Gemma 4 to autonomously plan, execute tools, and automate complex workflows</p>
+            <p className="text-xs text-slate-500">Instruct Gemma 4 (31B Dense / 26B MoE) to autonomously plan, execute tools, and automate complex workflows</p>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          {/* 1-Click Demo Task Trigger */}
+          <button
+            onClick={handleRunDemoTask}
+            disabled={isRunning}
+            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-extrabold rounded-xl shadow-md shadow-emerald-500/20 transition-all border border-emerald-500/30 flex items-center gap-1.5 hover:scale-[1.02]"
+            title="1-Click Judge Demo: profile_csv -> run_python -> web_search -> PDF report"
+          >
+            <Rocket className="w-4 h-4 text-amber-300 animate-bounce" /> Run Demo Task (1-Click Multi-Step)
+          </button>
+
           <button
             onClick={() => {
               setAttachedCsvName(null);
@@ -108,7 +126,7 @@ export default function AgentControlPanel({
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5 fill-current" /> Execute Automated Mission
+                <Play className="w-3.5 h-3.5 fill-current" /> Execute Mission
               </>
             )}
           </button>
@@ -272,7 +290,7 @@ export default function AgentControlPanel({
               onChange={(e) => setEnableMemory(e.target.checked)}
               className="rounded accent-emerald-600 bg-slate-100 border-slate-300"
             />
-            <span className="text-[11px] text-emerald-700 font-bold">RAG Memory Recall</span>
+            <span className="text-[11px] text-emerald-700 font-bold">Cross-Session RAG Memory</span>
           </label>
         </div>
 
