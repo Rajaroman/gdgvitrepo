@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 export default function KaggleExporter({ selectedModel, trajectory, memoryChunks }) {
   const [copied, setCopied] = useState(false);
   const [repoUrl, setRepoUrl] = useState('https://github.com/Rajaroman/gdgvitrepo');
-  const [demoUrl, setDemoUrl] = useState('http://localhost:3000/');
+  const [demoUrl, setDemoUrl] = useState('https://gdgvitrepo.vercel.app');
   const [notebookUrl, setNotebookUrl] = useState('https://www.kaggle.com/code/user/gemma-4-agentic-rag');
 
   const submissionMarkdown = `# 🚀 Gemma 4 Mission Control: Autonomous Multi-Step Reasoning Agent & Anti-Hallucination RAG Platform
