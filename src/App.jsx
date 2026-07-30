@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import AgentControlPanel, { MISSION_PRESETS } from './components/AgentControlPanel';
 import ReasoningDAG from './components/ReasoningDAG';
+import TreeOfThoughtVisualizer from './components/TreeOfThoughtVisualizer';
+import MultimodalInspector from './components/MultimodalInspector';
+import EdgeInferenceEngine from './components/EdgeInferenceEngine';
 import ToolSandbox from './components/ToolSandbox';
 import MemoryInspector, { INITIAL_MEMORY_CHUNKS } from './components/MemoryInspector';
 import GemmaShieldGuardrails from './components/GemmaShieldGuardrails';
 import KaggleExporter from './components/KaggleExporter';
-import { Bot, Sparkles, Layers, ShieldCheck, Database, CheckCircle, Terminal, Code2, Trophy } from 'lucide-react';
+import { Bot, Sparkles, Layers, ShieldCheck, Database, Trophy, GitBranch, Eye, WifiOff } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function App() {
@@ -180,13 +183,13 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider">Build with Gemma: GDG VIT Chennai</span>
                 <span className="text-white/60">•</span>
-                <span className="text-xs font-semibold text-blue-100">Track 1: Agents on a Mission</span>
+                <span className="text-xs font-semibold text-blue-100">Advanced Open Model Suite</span>
               </div>
               <h2 className="text-xl font-extrabold text-white mt-1">
-                Gemma 4 ReAct Agent & Vector RAG Workspace
+                Gemma 4 Agentic Workspace & Multimodal Suite
               </h2>
               <p className="text-xs text-blue-100 mt-0.5">
-                Autonomous action-oriented system powered by Google DeepMind's Gemma 4 with multi-step reasoning, dynamic tool execution, vector memory, and anti-hallucination guardrails.
+                Multi-step ReAct & Tree-of-Thought reasoning, local WebGPU edge inference, multimodal visual inspection, and Gemma Shield guardrails.
               </p>
             </div>
           </div>
@@ -194,7 +197,7 @@ export default function App() {
           <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
             <div className="px-3.5 py-2 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 text-xs font-mono text-white font-bold flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-300" />
-              Gemma 4 & RAG Active
+              Gemma 4 Advanced Suite Active
             </div>
           </div>
         </div>
@@ -222,6 +225,18 @@ export default function App() {
             currentStep={currentStep}
             finalOutput={finalOutput}
           />
+        )}
+
+        {activeTab === 'tot' && (
+          <TreeOfThoughtVisualizer />
+        )}
+
+        {activeTab === 'vision' && (
+          <MultimodalInspector />
+        )}
+
+        {activeTab === 'edge' && (
+          <EdgeInferenceEngine />
         )}
 
         {activeTab === 'memory' && (
@@ -267,7 +282,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-4 px-8 text-center text-xs text-slate-500">
-        Build with Gemma AI Buildathon • GDG VIT Chennai • Track 1: Agents on a Mission & Track 4: AI Shield
+        Build with Gemma AI Buildathon • GDG VIT Chennai • Track 1: Agents on a Mission, Track 3: Off the Grid & Track 4: AI Shield
       </footer>
 
     </div>
