@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
-import { Database, Plus, Search, Upload, Trash2, FileText, CheckCircle2, Sparkles } from 'lucide-react';
+import { Database, Plus, Search, Upload, Trash2, FileText, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 
 export const INITIAL_MEMORY_CHUNKS = [
+  {
+    id: 'mem-csv-1',
+    content: 'Raw Sales Anomaly Dataset (sales_anomalies_2026.csv): 500 total transaction records, 0 missing null cells, numerical features [revenue_usd, unit_sales, anomaly_score], mean revenue = $412.50, max anomaly outlier = $500.00.',
+    category: 'CSV Dataset: sales_anomalies.csv',
+    similarity: 0.985,
+    timestamp: '2026-07-30 08:30:00'
+  },
   {
     id: 'mem-1',
     content: 'Google Gemma 2 & Gemma 4 architectures incorporate Interleaved Multi-Query Attention (MQA) and Grouped-Query Attention (GQA) for 2.4x inference speedups on consumer hardware.',
@@ -28,7 +35,7 @@ export const INITIAL_MEMORY_CHUNKS = [
 export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [newChunkText, setNewChunkText] = useState('');
-  const [newChunkCategory, setNewChunkCategory] = useState('Domain Dataset');
+  const [newChunkCategory, setNewChunkCategory] = useState('CSV Dataset');
   const [uploadStatus, setUploadStatus] = useState(null);
 
   const handleAddChunk = () => {
@@ -48,25 +55,39 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadStatus(`Ingesting ${file.name}...`);
+    setUploadStatus(`Ingesting & Parsing ${file.name}...`);
     const reader = new FileReader();
 
     reader.onload = (event) => {
       const text = event.target?.result;
       if (typeof text === 'string') {
-        // Simple Chunking Strategy: Split into ~200 character paragraphs
-        const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 20);
-        
-        const newEntries = (paragraphs.length > 0 ? paragraphs : [text]).slice(0, 5).map((para, idx) => ({
-          id: `file-mem-${Date.now()}-${idx}`,
-          content: para.trim(),
-          category: `PDF/Doc: ${file.name}`,
-          similarity: 0.98 - idx * 0.02,
-          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
-        }));
+        const isCsv = file.name.endsWith('.csv');
+        let newEntries = [];
+
+        if (isCsv) {
+          const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+          const header = lines[0] || 'columns';
+          const rowCount = Math.max(0, lines.length - 1);
+          newEntries = [{
+            id: `csv-mem-${Date.now()}`,
+            content: `Parsed CSV File (${file.name}): ${rowCount} total rows, columns: [${header}]. Content preview: ${lines.slice(1, 4).join(' | ')}`,
+            category: `CSV Dataset: ${file.name}`,
+            similarity: 0.99,
+            timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+          }];
+        } else {
+          const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 20);
+          newEntries = (paragraphs.length > 0 ? paragraphs : [text]).slice(0, 5).map((para, idx) => ({
+            id: `file-mem-${Date.now()}-${idx}`,
+            content: para.trim(),
+            category: `Doc/File: ${file.name}`,
+            similarity: 0.98 - idx * 0.02,
+            timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+          }));
+        }
 
         setMemoryChunks([...newEntries, ...memoryChunks]);
-        setUploadStatus(`Successfully vectorized ${newEntries.length} chunks from ${file.name}!`);
+        setUploadStatus(`Successfully vectorized & parsed ${file.name} into RAG memory!`);
         setTimeout(() => setUploadStatus(null), 4000);
       }
     };
@@ -100,25 +121,25 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
-        {/* PDF / File Upload & Indexing Panel */}
+        {/* PDF / CSV File Upload & Indexing Panel */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           
-          {/* PDF & Document File Upload Box */}
+          {/* CSV / PDF File Upload Dropzone */}
           <div className="space-y-2">
             <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-              <Upload className="w-4 h-4 text-emerald-600" /> Upload PDF / Text Document for RAG
+              <Upload className="w-4 h-4 text-emerald-600" /> Upload CSV / PDF / Document for RAG
             </h3>
             
             <label className="block p-4 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50 text-center cursor-pointer transition-all">
               <input
                 type="file"
-                accept=".pdf,.txt,.md,.json,.csv"
+                accept=".csv,.pdf,.txt,.md,.json"
                 onChange={handleFileUpload}
                 className="hidden"
               />
-              <FileText className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
-              <div className="text-xs font-bold text-emerald-900">Click or Drag & Drop PDF / TXT File</div>
-              <div className="text-[10px] text-emerald-700 font-mono mt-0.5">Automatically chunks & vectorizes into RAG memory</div>
+              <FileSpreadsheet className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
+              <div className="text-xs font-bold text-emerald-900">Click or Drag & Drop CSV / PDF File</div>
+              <div className="text-[10px] text-emerald-700 font-mono mt-0.5">Automatically parses rows & vectorizes into RAG memory</div>
             </label>
 
             {uploadStatus && (
@@ -131,13 +152,13 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
 
           <div className="border-t border-slate-200 pt-3 space-y-3">
             <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-              <Plus className="w-4 h-4 text-blue-600" /> Or Paste Raw Text Chunk
+              <Plus className="w-4 h-4 text-blue-600" /> Or Paste Raw Text / CSV Row
             </h3>
             
             <textarea
               value={newChunkText}
               onChange={(e) => setNewChunkText(e.target.value)}
-              placeholder="Paste custom text or research specs to index into RAG vector memory..."
+              placeholder="Paste raw CSV rows or dataset content to index into RAG vector memory..."
               rows={3}
               className="w-full glass-input p-3 rounded-xl text-xs text-slate-800 placeholder-slate-400 font-mono resize-none"
             />
@@ -148,10 +169,10 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
                 onChange={(e) => setNewChunkCategory(e.target.value)}
                 className="flex-1 bg-slate-50 border border-slate-200 text-slate-700 font-medium rounded-xl p-2 text-xs focus:outline-none"
               >
+                <option value="CSV Dataset">CSV Dataset</option>
                 <option value="Domain Dataset">Domain Dataset</option>
                 <option value="Agent Specs">Agent Specs</option>
                 <option value="User Preference">User Preference</option>
-                <option value="System Prompt">System Prompt</option>
               </select>
 
               <button
@@ -175,7 +196,7 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search vectorized memory chunks by keyword or semantic similarity..."
+                placeholder="Search vectorized CSV datasets & memory chunks..."
                 className="w-full glass-input pl-9 pr-3 py-2 rounded-xl text-xs text-slate-800"
               />
             </div>
@@ -194,7 +215,7 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
                 >
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-100 text-blue-800 border border-blue-200 font-bold">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
                         {chunk.category}
                       </span>
                       <span className="text-[10px] font-mono text-emerald-700 font-bold">

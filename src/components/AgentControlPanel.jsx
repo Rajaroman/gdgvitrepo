@@ -1,5 +1,5 @@
-import React from 'react';
-import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, Layers } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, FileSpreadsheet, Paperclip, CheckCircle2 } from 'lucide-react';
 
 export const MISSION_PRESETS = [
   {
@@ -49,6 +49,8 @@ export default function AgentControlPanel({
   activeTools,
   toggleTool
 }) {
+  const [attachedCsvName, setAttachedCsvName] = useState(null);
+
   const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
@@ -56,6 +58,14 @@ export default function AgentControlPanel({
         onRunMission();
       }
     }
+  };
+
+  const handleCsvAttachment = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAttachedCsvName(file.name);
+    setPrompt(`Analyze attached CSV dataset "${file.name}" from RAG memory, write a Python Pandas script to inspect columns, clean missing values, identify numerical outliers, and compute summary statistics.`);
   };
 
   return (
@@ -76,7 +86,10 @@ export default function AgentControlPanel({
         {/* Action Controls */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
-            onClick={onResetMission}
+            onClick={() => {
+              setAttachedCsvName(null);
+              onResetMission();
+            }}
             disabled={isRunning}
             className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all border border-slate-200 disabled:opacity-50 flex items-center gap-1.5"
           >
@@ -115,7 +128,10 @@ export default function AgentControlPanel({
           {MISSION_PRESETS.map((preset) => (
             <button
               key={preset.id}
-              onClick={() => setPrompt(preset.prompt)}
+              onClick={() => {
+                setAttachedCsvName(null);
+                setPrompt(preset.prompt);
+              }}
               disabled={isRunning}
               className={`p-3 text-left rounded-xl border text-xs transition-all flex flex-col justify-between gap-2 ${
                 prompt === preset.prompt
@@ -136,17 +152,39 @@ export default function AgentControlPanel({
         </div>
       </div>
 
-      {/* Main Textarea */}
-      <div className="relative">
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isRunning}
-          placeholder="Describe your complex multi-step task for Gemma 4 to automate (e.g. 'Load dataset from RAG, clean null values with Python, and format summary statistics')..."
-          rows={3}
-          className="w-full glass-input p-3.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 resize-none font-mono focus:ring-2 focus:ring-blue-500 leading-relaxed"
-        />
+      {/* Main Textarea & CSV Attachment Row */}
+      <div className="space-y-2">
+        <div className="relative">
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isRunning}
+            placeholder="Describe your complex multi-step task for Gemma 4 to automate (e.g. 'Load dataset from RAG, clean null values with Python, and format summary statistics')..."
+            rows={3}
+            className="w-full glass-input p-3.5 rounded-xl text-xs text-slate-800 placeholder-slate-400 resize-none font-mono focus:ring-2 focus:ring-blue-500 leading-relaxed"
+          />
+        </div>
+
+        {/* CSV Attachment Bar */}
+        <div className="flex items-center justify-between gap-2">
+          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold cursor-pointer transition-all">
+            <input
+              type="file"
+              accept=".csv,.txt"
+              onChange={handleCsvAttachment}
+              className="hidden"
+            />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>{attachedCsvName ? `Replace CSV: ${attachedCsvName}` : '📎 Attach CSV / Dataset File'}</span>
+          </label>
+
+          {attachedCsvName && (
+            <span className="text-xs font-mono text-emerald-700 font-bold flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Attached: {attachedCsvName}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Tool & Config Checklist */}
