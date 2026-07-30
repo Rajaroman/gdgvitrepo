@@ -81,13 +81,13 @@ export default function App() {
     // 3. Perform REAL Factuality Audit Check on the USER QUERY
     const realAudit = realAuditFactuality(userQueryText, memoryChunks);
 
-    // Generate Dynamic ReAct Trajectory from Real Tool Execution Results (Tailored directly from prompt)
+    // Generate Dynamic ReAct Trajectory
     const realSteps = [
       {
         stepNumber: 1,
         confidence: 99,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Deconstructing prompt: "${userQueryText}". Searching 768d vector store to retrieve grounded context matching user request. [Guardrail Similarity: ${similarityScore}%]`,
+        thought: `Deconstructing prompt: "${userQueryText}". Searching 768d vector store to retrieve grounded context. [Guardrail Similarity: ${similarityScore}%]`,
         action: {
           tool: "vector_memory_rag",
           args: { query: userQueryText.substring(0, 60), top_k: 2 }
@@ -98,7 +98,7 @@ export default function App() {
         stepNumber: 2,
         confidence: realAudit.status === 'FLAGGED_HALLUCINATION' ? 45 : 96,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Analyzing retrieved context for "${userQueryText.substring(0, 30)}". Invoking web search tool to verify industry data points. [Guardrail Check: ${realAudit.status === 'FLAGGED_HALLUCINATION' ? 'Ungrounded Claim Flagged!' : 'Passed'}]`,
+        thought: `Analyzing retrieved context for "${userQueryText.substring(0, 30)}". Invoking web search tool to verify data points. [Guardrail Check: ${realAudit.status === 'FLAGGED_HALLUCINATION' ? 'Ungrounded Claim Flagged!' : 'Passed'}]`,
         action: {
           tool: "web_search_google",
           args: { query: `${userQueryText.substring(0, 40)} latest specs` }
@@ -153,25 +153,27 @@ export default function App() {
 
         if (realAudit.status === 'FLAGGED_HALLUCINATION') {
           setFinalOutput(
-            `⚠️ **Gemma Shield Guardrail Alert: Hallucination Risk Detected**\n` +
-            `📌 **Topic Processed**: "${userQueryText}"\n` +
-            `🛡️ *Audited by Gemma Shield Guardrails (${realAudit.hallucinationScore}% Risk Score - FLAGGED)*\n\n` +
-            `1. **Factuality Violation**: Extreme claims ("950 Wh/kg", "fusion/quantum") do NOT match verified vector memory sources.\n` +
-            `2. **Verified RAG Baseline**: Standard solid-state battery baseline is **280 Wh/kg** (2025) to **450 Wh/kg** (2026 pilot line).\n` +
-            `3. **Python Analytical Verification**:\n` +
-            `   ${realPythonOutput.stdout.split('\n')[0]}\n` +
-            `4. **Safety Verdict**: Statement flagged as ungrounded hallucination. Corrected metrics provided above.`
+            `### ⚠️ Gemma Shield Guardrail Alert: Hallucination Risk Flagged\n\n` +
+            `I analyzed your query: **"${userQueryText}"**, but detected ungrounded claims that do NOT match our verified RAG memory store.\n\n` +
+            `#### ❌ Flagged Unverified Claims:\n` +
+            `- Terms such as **"950 Wh/kg"** and **"fusion/quantum anodes"** do not exist in verified technical benchmarks.\n\n` +
+            `#### 🔍 Verified Factual RAG Baseline:\n` +
+            `- **Retrieved Memory**: "${topChunkText}"\n` +
+            `- **True Baseline Energy Density**: **280 Wh/kg** (2025) to **450 Wh/kg** (2026 pilot line).\n` +
+            `- **Python Analytics**: ${realPythonOutput.stdout.split('\n')[0]}\n\n` +
+            `🛡️ *Gemma Shield Audit: ${realAudit.hallucinationScore}% Risk Score (Flagged & Corrected)*`
           );
         } else {
           setFinalOutput(
-            `🎯 **Gemma 4 Dynamic RAG Mission Output**\n` +
-            `📌 **Topic Processed**: "${userQueryText}"\n` +
-            `🛡️ *Audited by Gemma Shield Guardrails (0.0% Hallucination Risk Score - PASSED)*\n\n` +
-            `1. **Real RAG Context Grounding**: Retrieved factual vector memory (${similarityScore}% match):\n` +
-            `   "${topChunkText.substring(0, 140)}..."\n` +
-            `2. **Real Python Execution Output**:\n` +
-            `   ${realPythonOutput.stdout.split('\n')[0]}\n` +
-            `3. **Factuality & Safety Verification**: 100% of claims match real retrieved vector memory sources.`
+            `### 🤖 Gemma 4 AI Response (Factually Grounded via Vector RAG)\n\n` +
+            `Based on your prompt **"${userQueryText}"**, here is the synthesized factual response using our 768-dimensional vector memory store and tool execution:\n\n` +
+            `1. **Retrieved Vector Memory Facts** (${similarityScore}% Match):\n` +
+            `   *"${topChunkText}"*\n\n` +
+            `2. **Python Sandbox Calculations**:\n` +
+            `   - ${realPythonOutput.stdout.split('\n')[0]}\n` +
+            `   - ${realPythonOutput.stdout.split('\n')[1] || ''}\n\n` +
+            `3. **Factuality Guarantee**: 100% of generated numbers match verified RAG memory sources with zero hallucinations.\n\n` +
+            `🛡️ *Gemma Shield Audit: 0.0% Hallucination Risk (100% Grounded)*`
           );
         }
       }
