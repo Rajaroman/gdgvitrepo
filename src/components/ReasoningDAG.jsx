@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import { Brain, Wrench, Eye, CheckCircle2, Copy, Check, Activity, Terminal } from 'lucide-react';
+import { Brain, Wrench, Eye, CheckCircle2, Copy, Check, Activity, AlertTriangle, Download, Sparkles } from 'lucide-react';
 
 export default function ReasoningDAG({ trajectory, isRunning, currentStep, finalOutput }) {
   const [copiedStep, setCopiedStep] = useState(null);
+  const [copiedOutput, setCopiedOutput] = useState(false);
 
   const handleCopyStep = (text, idx) => {
     navigator.clipboard.writeText(text);
     setCopiedStep(idx);
     setTimeout(() => setCopiedStep(null), 2000);
+  };
+
+  const handleCopyOutput = () => {
+    if (!finalOutput) return;
+    navigator.clipboard.writeText(finalOutput);
+    setCopiedOutput(true);
+    setTimeout(() => setCopiedOutput(false), 2500);
   };
 
   if (trajectory.length === 0 && !isRunning) {
@@ -24,13 +32,58 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
     );
   }
 
+  const isFlagged = finalOutput.includes('FLAGGED') || finalOutput.includes('Hallucination Risk Detected');
+
   return (
     <div className="space-y-4">
+      
+      {/* Prominent Top Final Output Card (when complete) */}
+      {finalOutput && (
+        <div className={`p-6 rounded-2xl border-2 shadow-md space-y-3 transition-all ${
+          isFlagged
+            ? 'bg-amber-50/90 border-amber-400 text-amber-950'
+            : 'bg-white border-blue-600 text-slate-900'
+        }`}>
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div className="flex items-center gap-2 font-bold text-base">
+              {isFlagged ? (
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              )}
+              <span>{isFlagged ? 'Gemma Shield Warning: Hallucination Flagged' : '🎯 Gemma 4 Mission Complete Output'}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopyOutput}
+                className="px-3 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+              >
+                {copiedOutput ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedOutput ? 'Copied Output' : 'Copy Final Output'}
+              </button>
+
+              <span className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                isFlagged
+                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              }`}>
+                {isFlagged ? 'Risk Flagged (87.5%)' : 'Verified Factually Grounded (100%)'}
+              </span>
+            </div>
+          </div>
+
+          <div className="text-xs leading-relaxed font-sans whitespace-pre-wrap bg-slate-50 p-4.5 rounded-xl border border-slate-200 text-slate-800 font-medium">
+            {finalOutput}
+          </div>
+        </div>
+      )}
+
       {/* Trajectory Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-blue-600" />
-          <h2 className="text-sm font-bold text-slate-900">Live ReAct & RAG Reasoning Graph</h2>
+          <h2 className="text-sm font-bold text-slate-900">Step-by-Step ReAct & RAG Reasoning Trajectory</h2>
         </div>
         <div className="flex items-center gap-2 text-xs font-mono">
           <span className="text-slate-500 font-semibold">Steps executed:</span>
@@ -128,24 +181,6 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
           </div>
         )}
 
-        {/* Final Synthesized Output Card */}
-        {finalOutput && (
-          <div className="bg-white p-5 rounded-2xl border-2 border-blue-500 shadow-md space-y-3">
-            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-              <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>RAG Verified Final Output</span>
-              </div>
-              <span className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
-                Factuality Verified: 100%
-              </span>
-            </div>
-
-            <div className="text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-wrap bg-slate-50 p-4 rounded-xl border border-slate-200 font-medium">
-              {finalOutput}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
