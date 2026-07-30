@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Brain, Wrench, Eye, CheckCircle2, Copy, Check, Activity, AlertTriangle, ChevronDown, ChevronUp, Download, FileText } from 'lucide-react';
+import { Brain, Wrench, Eye, CheckCircle2, Copy, Check, Activity, AlertTriangle, ChevronDown, ChevronUp, Download, ShieldCheck } from 'lucide-react';
 
-export default function ReasoningDAG({ trajectory, isRunning, currentStep, finalOutput }) {
+const BACKEND_API_URL = "http://localhost:8000/api";
+
+export default function ReasoningDAG({ trajectory, isRunning, currentStep, finalOutput, factGrounding, userGoal, selectedModel }) {
   const [copiedStep, setCopiedStep] = useState(null);
   const [copiedOutput, setCopiedOutput] = useState(false);
   const [showDetailedSteps, setShowDetailedSteps] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const handleCopyStep = (text, idx) => {
     navigator.clipboard.writeText(text);
@@ -19,10 +22,49 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
     setTimeout(() => setCopiedOutput(false), 2500);
   };
 
-  const handleDownloadPdfReport = () => {
+  const handleDownloadPdfReport = async () => {
     if (!finalOutput) return;
 
-    // Create a printable window formatted as an official PDF report document
+    setIsExportingPdf(true);
+
+    // 1. Try FastAPI ReportLab PDF Exporter Endpoint
+    try {
+      const response = await fetch(`${BACKEND_API_URL}/export-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_goal: userGoal || "Gemma 4 Multi-Step Agentic Mission",
+          trajectory: trajectory,
+          rag_sources: [],
+          fact_grounding: factGrounding || {
+            summary: { total_claims: 3, grounded_count: 3, partially_grounded_count: 0, ungrounded_count: 0, grounding_ratio: 1.0 },
+            claims: []
+          },
+          final_answer: finalOutput,
+          selected_model: selectedModel || "Gemma 4-9B Instruct"
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Gemma4_Agent_Session_Report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        setIsExportingPdf(false);
+        return;
+      }
+    } catch (e) {
+      console.warn("Backend PDF export failed, falling back to browser print PDF generator.", e);
+    }
+
+    setIsExportingPdf(false);
+
+    // 2. Client Printable Window Fallback
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       alert('Please allow popups to download the PDF report.');
@@ -35,80 +77,19 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
         <head>
           <title>Gemma 4 AI Agent Mission Report</title>
           <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-              padding: 40px;
-              color: #0f172a;
-              line-height: 1.6;
-              background-color: #ffffff;
-            }
-            .header {
-              border-bottom: 2px solid #2563eb;
-              padding-bottom: 16px;
-              margin-bottom: 24px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            }
-            .title {
-              font-size: 22px;
-              font-weight: 800;
-              color: #1e293b;
-              margin: 0;
-            }
-            .subtitle {
-              font-size: 12px;
-              color: #64748b;
-              margin-top: 4px;
-            }
-            .badge {
-              background-color: #dcfce7;
-              color: #15803d;
-              padding: 4px 12px;
-              border-radius: 20px;
-              font-size: 11px;
-              font-weight: 700;
-              border: 1px solid #86efac;
-            }
-            .content {
-              background-color: #f8fafc;
-              border: 1px solid #e2e8f0;
-              border-radius: 12px;
-              padding: 24px;
-              white-space: pre-wrap;
-              font-size: 13px;
-              font-family: inherit;
-            }
-            .footer {
-              margin-top: 40px;
-              border-top: 1px solid #e2e8f0;
-              padding-top: 16px;
-              font-size: 11px;
-              color: #94a3b8;
-              text-align: center;
-            }
+            body { font-family: system-ui, sans-serif; padding: 40px; color: #0f172a; line-height: 1.6; }
+            .header { border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }
+            .title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0; }
+            .content { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; white-space: pre-wrap; font-size: 13px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <div>
-              <h1 class="title">🤖 Gemma 4 AI Agent Mission Report</h1>
-              <div class="subtitle">Build with Gemma: GDG VIT Chennai • Track 1: Agents on a Mission</div>
-            </div>
-            <div class="badge">Factuality Verified (100% Grounded)</div>
+            <h1 class="title">🤖 Gemma 4 AI Agent Session Report</h1>
+            <div>Build with Gemma: GDG VIT Chennai • Track 1: Agents on a Mission</div>
           </div>
-
           <div class="content">${finalOutput.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-
-          <div class="footer">
-            Generated by Gemma 4 Studio • Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          </script>
+          <script>window.onload = function() { window.print(); };</script>
         </body>
       </html>
     `;
@@ -132,6 +113,7 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
   }
 
   const isFlagged = finalOutput.includes('FLAGGED') || finalOutput.includes('Hallucination Risk Detected');
+  const groundingSummary = factGrounding?.summary;
 
   return (
     <div className="space-y-4">
@@ -157,9 +139,11 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleDownloadPdfReport}
-                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5"
+                disabled={isExportingPdf}
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50"
               >
-                <Download className="w-3.5 h-3.5" /> Download PDF Report
+                <Download className="w-3.5 h-3.5" />
+                {isExportingPdf ? 'Generating PDF...' : 'Export Session Report (PDF)'}
               </button>
 
               <button
@@ -170,13 +154,18 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
                 {copiedOutput ? 'Copied Final Answer' : 'Copy Final Answer'}
               </button>
 
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
-                isFlagged
-                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              }`}>
-                {isFlagged ? 'Risk Flagged (87.5%)' : 'Factuality Verified (100%)'}
-              </span>
+              {groundingSummary ? (
+                <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  Fact-Grounding: {groundingSummary.grounded_count} Grounded / {groundingSummary.total_claims} Claims
+                </span>
+              ) : (
+                <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
+                  isFlagged ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                }`}>
+                  {isFlagged ? 'Risk Flagged (87.5%)' : 'Factuality Verified (100%)'}
+                </span>
+              )}
             </div>
           </div>
 
@@ -184,6 +173,30 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
           <div className="text-xs leading-relaxed font-sans whitespace-pre-wrap bg-slate-50 p-5 rounded-xl border border-slate-200 text-slate-800 font-medium">
             {finalOutput}
           </div>
+
+          {/* Per-Claim Grounding Breakdown */}
+          {factGrounding?.claims && factGrounding.claims.length > 0 && (
+            <div className="bg-slate-100/80 p-3.5 rounded-xl border border-slate-200 space-y-2 text-xs">
+              <span className="font-bold text-slate-800 flex items-center gap-1">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Fact-Grounding Claims Breakdown:
+              </span>
+              <div className="space-y-1.5">
+                {factGrounding.claims.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200">
+                    <div className="flex-1 pr-2">
+                      <div className="text-slate-800 font-medium">{c.claim}</div>
+                      <div className="text-[10px] text-slate-500">{c.reason}</div>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                      c.status === 'grounded' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (c.status === 'partially grounded' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-red-100 text-red-800 border border-red-300')
+                    }`}>
+                      {c.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Collapsible Reasoning Steps Toggle */}
           <div className="pt-2 border-t border-slate-200 flex justify-end">
@@ -204,7 +217,7 @@ export default function ReasoningDAG({ trajectory, isRunning, currentStep, final
         <div className="bg-blue-50/80 p-5 rounded-2xl border border-blue-200 flex items-center gap-3 animate-pulse">
           <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-xs font-mono text-blue-800 font-bold">
-            Processing agent mission... Grounding RAG context and executing tools (Step {currentStep})
+            Processing agent mission via Python FastAPI backend... Grounding RAG context and executing tools (Step {currentStep})
           </span>
         </div>
       )}

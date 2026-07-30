@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Database, Plus, Search, Upload, Trash2, FileText, CheckCircle2, FileSpreadsheet } from 'lucide-react';
+import { Database, Plus, Search, Upload, Trash2, CheckCircle2, FileSpreadsheet } from 'lucide-react';
+
+const BACKEND_API_URL = "http://localhost:8000/api";
 
 export const INITIAL_MEMORY_CHUNKS = [
   {
@@ -51,13 +53,43 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
     setNewChunkText('');
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadStatus(`Ingesting & Parsing ${file.name}...`);
-    const reader = new FileReader();
+    setUploadStatus(`Ingesting & Embedding ${file.name}...`);
 
+    // 1. Try FastAPI Python Upload Endpoint
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${BACKEND_API_URL}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newEntry = {
+          id: data.file_id || `file-mem-${Date.now()}`,
+          content: `Ingested ${file.name}: ${data.chunks_count || data.rows_count || '1'} blocks indexed into 768d vector store.`,
+          category: `${file.name.endsWith('.csv') ? 'CSV Dataset' : 'PDF Document'}: ${file.name}`,
+          similarity: 0.99,
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+
+        setMemoryChunks([newEntry, ...memoryChunks]);
+        setUploadStatus(`Successfully vectorized ${file.name} into Python FastAPI RAG Store!`);
+        setTimeout(() => setUploadStatus(null), 4000);
+        return;
+      }
+    } catch (err) {
+      console.warn("Backend upload failed, falling back to client text reader.", err);
+    }
+
+    // 2. Client Fallback
+    const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result;
       if (typeof text === 'string') {
@@ -113,7 +145,7 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
           <h2 className="text-sm font-bold text-slate-900">Vector & Episodic RAG Memory Store</h2>
         </div>
         <div className="flex items-center gap-2 text-xs font-mono text-slate-600">
-          <span>Embedding Engine: <span className="text-emerald-700 font-bold">Gemma-Embed-768d</span></span>
+          <span>Embedding Engine: <span className="text-emerald-700 font-bold">FastAPI 768d Cosine Vectorizer</span></span>
           <span className="text-slate-300">|</span>
           <span>Indexed Chunks: <span className="text-blue-700 font-bold">{memoryChunks.length}</span></span>
         </div>
@@ -139,7 +171,7 @@ export default function MemoryInspector({ memoryChunks, setMemoryChunks }) {
               />
               <FileSpreadsheet className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
               <div className="text-xs font-bold text-emerald-900">Click or Drag & Drop CSV / PDF File</div>
-              <div className="text-[10px] text-emerald-700 font-mono mt-0.5">Automatically parses rows & vectorizes into RAG memory</div>
+              <div className="text-[10px] text-emerald-700 font-mono mt-0.5">Chunks PDFs & profiles CSVs into 768d vector store</div>
             </label>
 
             {uploadStatus && (
