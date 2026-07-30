@@ -5,7 +5,7 @@ import ReasoningDAG from './components/ReasoningDAG';
 import ToolSandbox from './components/ToolSandbox';
 import MemoryInspector, { INITIAL_MEMORY_CHUNKS } from './components/MemoryInspector';
 import GemmaShieldGuardrails from './components/GemmaShieldGuardrails';
-import { realVectorSearch, realExecutePythonCode, realAuditFactuality } from './utils/realAgentEngine';
+import { realVectorSearch, realExecutePythonCode, realAuditFactuality, realSynthesizeAgentResponse } from './utils/realAgentEngine';
 import { Bot, Sparkles, Layers, ShieldCheck, Database, Trophy } from 'lucide-react';
 
 export default function App() {
@@ -87,7 +87,7 @@ export default function App() {
         stepNumber: 1,
         confidence: 99,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Deconstructing prompt: "${userQueryText}". Searching 768d vector store to retrieve grounded context. [Guardrail Similarity: ${similarityScore}%]`,
+        thought: `Deconstructing prompt task: "${userQueryText}". Searching 768d vector store to retrieve grounded context. [Guardrail Similarity: ${similarityScore}%]`,
         action: {
           tool: "vector_memory_rag",
           args: { query: userQueryText.substring(0, 60), top_k: 2 }
@@ -105,7 +105,7 @@ export default function App() {
         },
         observation: realAudit.status === 'FLAGGED_HALLUCINATION'
           ? `Web Search Audit: Claims in prompt ("950 Wh/kg", "fusion/quantum") NOT supported by verified technical benchmarks.`
-          : `Found 3 verified web snippets matching "${userQueryText.substring(0, 25)}": Technical specs, benchmarks, and data metrics.`
+          : `Found verified web snippets matching "${userQueryText.substring(0, 25)}": Technical specs, benchmarks, and data metrics.`
       },
       {
         stepNumber: 3,
@@ -121,7 +121,6 @@ export default function App() {
       {
         stepNumber: 4,
         confidence: realAudit.status === 'FLAGGED_HALLUCINATION' ? 50 : 99,
-        timestamp: new Date().toLocaleTimeString(),
         thought: `Cross-referencing all calculated outputs for "${userQueryText.substring(0, 30)}" against Gemma Shield Guardrails. Audit Status: ${realAudit.status}.`,
         action: null,
         observation: null
@@ -154,7 +153,7 @@ export default function App() {
         if (realAudit.status === 'FLAGGED_HALLUCINATION') {
           setFinalOutput(
             `### ⚠️ Gemma Shield Guardrail Alert: Hallucination Risk Flagged\n\n` +
-            `I analyzed your query: **"${userQueryText}"**, but detected ungrounded claims that do NOT match our verified RAG memory store.\n\n` +
+            `I analyzed your prompt **"${userQueryText}"**, but detected ungrounded claims that do NOT match our verified RAG memory store.\n\n` +
             `#### ❌ Flagged Unverified Claims:\n` +
             `- Terms such as **"950 Wh/kg"** and **"fusion/quantum anodes"** do not exist in verified technical benchmarks.\n\n` +
             `#### 🔍 Verified Factual RAG Baseline:\n` +
@@ -164,17 +163,14 @@ export default function App() {
             `🛡️ *Gemma Shield Audit: ${realAudit.hallucinationScore}% Risk Score (Flagged & Corrected)*`
           );
         } else {
-          setFinalOutput(
-            `### 🤖 Gemma 4 AI Response (Factually Grounded via Vector RAG)\n\n` +
-            `Based on your prompt **"${userQueryText}"**, here is the synthesized factual response using our 768-dimensional vector memory store and tool execution:\n\n` +
-            `1. **Retrieved Vector Memory Facts** (${similarityScore}% Match):\n` +
-            `   *"${topChunkText}"*\n\n` +
-            `2. **Python Sandbox Calculations**:\n` +
-            `   - ${realPythonOutput.stdout.split('\n')[0]}\n` +
-            `   - ${realPythonOutput.stdout.split('\n')[1] || ''}\n\n` +
-            `3. **Factuality Guarantee**: 100% of generated numbers match verified RAG memory sources with zero hallucinations.\n\n` +
-            `🛡️ *Gemma Shield Audit: 0.0% Hallucination Risk (100% Grounded)*`
+          // Generate Task-Specific Agent Response (Data Science CSV, Security, API, or Research)
+          const synthesizedReport = realSynthesizeAgentResponse(
+            userQueryText,
+            topChunkText,
+            realPythonOutput.stdout,
+            similarityScore
           );
+          setFinalOutput(synthesizedReport);
         }
       }
     }, 1100);
