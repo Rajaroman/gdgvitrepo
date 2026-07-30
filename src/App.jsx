@@ -8,14 +8,12 @@ import EdgeInferenceEngine from './components/EdgeInferenceEngine';
 import ToolSandbox from './components/ToolSandbox';
 import MemoryInspector, { INITIAL_MEMORY_CHUNKS } from './components/MemoryInspector';
 import GemmaShieldGuardrails from './components/GemmaShieldGuardrails';
-import KaggleExporter from './components/KaggleExporter';
 import { Bot, Sparkles, Layers, ShieldCheck, Database, Trophy, GitBranch, Eye, WifiOff } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function App() {
   const [selectedModel, setSelectedModel] = useState('gemma-4-9b-it');
   const [activeTab, setActiveTab] = useState('mission');
-  const [showExporterModal, setShowExporterModal] = useState(false);
 
   // Guardrail Configuration
   const [activeGuardrails, setActiveGuardrails] = useState({
@@ -167,7 +165,6 @@ export default function App() {
         agentStatus={isRunning ? 'running' : 'idle'}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onExportClick={() => setShowExporterModal(true)}
       />
 
       {/* Main Content Area */}
@@ -255,27 +252,6 @@ export default function App() {
             activeGuardrails={activeGuardrails}
             toggleGuardrail={toggleGuardrail}
           />
-        )}
-
-        {/* Kaggle Submission Modal */}
-        {showExporterModal && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="max-w-4xl w-full">
-              <div className="flex justify-end mb-2">
-                <button
-                  onClick={() => setShowExporterModal(false)}
-                  className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold shadow"
-                >
-                  ✕ Close Modal
-                </button>
-              </div>
-              <KaggleExporter
-                selectedModel={selectedModel}
-                trajectory={trajectory}
-                memoryChunks={memoryChunks}
-              />
-            </div>
-          </div>
         )}
 
       </main>

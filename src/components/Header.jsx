@@ -1,7 +1,7 @@
 import React from 'react';
-import { Bot, Sparkles, Cpu, Database, Share2, Layers, ShieldCheck, Zap, Eye, GitBranch, WifiOff } from 'lucide-react';
+import { Bot, Sparkles, Cpu, Database, Layers, ShieldCheck, Zap, Eye, GitBranch, WifiOff } from 'lucide-react';
 
-export default function Header({ selectedModel, setSelectedModel, agentStatus, activeTab, setActiveTab, onExportClick }) {
+export default function Header({ selectedModel, setSelectedModel, agentStatus, activeTab, setActiveTab }) {
   return (
     <header className="sticky top-0 z-50 bg-white/90 border-b border-slate-200 px-4 lg:px-8 py-2.5 backdrop-blur-xl shadow-sm">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
@@ -111,9 +111,9 @@ export default function Header({ selectedModel, setSelectedModel, agentStatus, a
           </button>
         </nav>
 
-        {/* Gemma 4 Model Selector & Writeup Exporter */}
+        {/* Gemma 4 Model Selector */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200 text-xs">
+          <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
             <Cpu className="w-3.5 h-3.5 text-purple-600" />
             <select
               value={selectedModel}
@@ -126,14 +126,6 @@ export default function Header({ selectedModel, setSelectedModel, agentStatus, a
               <option value="gemma-4-4b-mobile" className="bg-white text-slate-800">Gemma 4-4B Edge</option>
             </select>
           </div>
-
-          <button
-            onClick={onExportClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-500/20 transition-all hover:scale-[1.02]"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            Kaggle Writeup
-          </button>
         </div>
 
       </div>
