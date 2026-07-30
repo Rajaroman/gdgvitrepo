@@ -1,0 +1,7 @@
+metric_id,component_name,true_baseline_value,unit,max_physical_limit,verification_source,status
+MTR-001,Lithium Anode Density,280.5,Wh/kg,450.0,Verified RAG Lab Spec 2025,GROUNDED_FACT
+MTR-002,Silicon Solid Electrolyte,412.0,Wh/kg,500.0,Verified RAG Lab Spec 2026,GROUNDED_FACT
+MTR-003,Solar Cell Efficiency,24.8,%,33.7,Verified NREL Benchmark,GROUNDED_FACT
+MTR-004,Quantum Fusion Anode,950.0,Wh/kg,450.0,UNGROUNDED_PROMPT_INJECTION,HALLUCINATION_FLAG
+MTR-005,Superconductor Critical Temp,138.0,K,160.0,Verified Physical Limit,GROUNDED_FACT
+MTR-006,Perovskite Tandem Cell,29.5,%,34.0,Verified NREL Benchmark,GROUNDED_FACT

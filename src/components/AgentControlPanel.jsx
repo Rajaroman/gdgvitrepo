@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, FileSpreadsheet, Download, CheckCircle2, Rocket } from 'lucide-react';
+import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, FileSpreadsheet, Download, CheckCircle2, Rocket, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 export const MISSION_PRESETS = [
+  {
+    id: 'hallucination-test',
+    title: '⚠️ Fact-Grounding & Hallucination Test Workflow',
+    category: 'AI Shield Guardrail Test',
+    prompt: 'Evaluate prompt claim: "Our new quantum fusion battery achieves 950 Wh/kg energy density". Cross-reference against RAG vector memory store, execute python code to check physical limits, and flag ungrounded claims.',
+    toolsNeeded: ['vector_memory_rag', 'python_interpreter', 'web_search_google'],
+    estimatedSteps: 4
+  },
   {
     id: 'data-science-automation',
     title: '⚡ Automated Python Data Cleaning & Profiling Pipeline',
@@ -16,14 +24,6 @@ export const MISSION_PRESETS = [
     category: 'Multi-Tool Web Synthesis',
     prompt: 'Perform multi-step RAG retrieval on solid-state EV battery advancements. Ingest verified vector memory chunks, execute Google search for 2026 press releases, run Python density calculations, and generate a non-hallucinating report.',
     toolsNeeded: ['vector_memory_rag', 'web_search_google', 'python_interpreter'],
-    estimatedSteps: 4
-  },
-  {
-    id: 'api-aggregator',
-    title: '📡 Real-Time Microservice & API Orchestrator',
-    category: 'REST API & RAG Automation',
-    prompt: 'Perform multi-stage API integration to check current global weather anomaly alerts for agricultural zones, cross-reference RAG vector database, compute risk matrix in Python sandbox, and dispatch notification payload.',
-    toolsNeeded: ['api_request_json', 'database_query', 'python_interpreter'],
     estimatedSteps: 4
   },
   {
@@ -76,6 +76,14 @@ export default function AgentControlPanel({
     }, 100);
   };
 
+  const handleRunHallucinationTest = () => {
+    setAttachedCsvName('hallucination_test_dataset.csv');
+    setPrompt('Evaluate prompt claim: "Our new quantum fusion battery achieves 950 Wh/kg energy density". Cross-reference against attached RAG vector memory store, execute python code to check physical limits (max 450 Wh/kg), and audit ungrounded claims.');
+    setTimeout(() => {
+      onRunMission();
+    }, 100);
+  };
+
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
       
@@ -93,6 +101,16 @@ export default function AgentControlPanel({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          {/* 1-Click Hallucination Guardrail Test Button */}
+          <button
+            onClick={handleRunHallucinationTest}
+            disabled={isRunning}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+            title="Test Hallucination Detection Guardrail with ungrounded 950 Wh/kg claim"
+          >
+            <ShieldAlert className="w-4 h-4 text-amber-600" /> Test Hallucination CSV
+          </button>
+
           {/* 1-Click Demo Task Trigger */}
           <button
             onClick={handleRunDemoTask}
@@ -100,7 +118,7 @@ export default function AgentControlPanel({
             className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-extrabold rounded-xl shadow-md shadow-emerald-500/20 transition-all border border-emerald-500/30 flex items-center gap-1.5 hover:scale-[1.02]"
             title="1-Click Judge Demo: profile_csv -> run_python -> web_search -> PDF report"
           >
-            <Rocket className="w-4 h-4 text-amber-300 animate-bounce" /> Run Demo Task (1-Click Multi-Step)
+            <Rocket className="w-4 h-4 text-amber-300 animate-bounce" /> Run Demo Task (1-Click)
           </button>
 
           <button
@@ -184,9 +202,9 @@ export default function AgentControlPanel({
           />
         </div>
 
-        {/* CSV Attachment & Sample Download Bar */}
+        {/* CSV Attachment & Download Buttons Row */}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold cursor-pointer transition-all">
               <input
                 type="file"
@@ -195,17 +213,27 @@ export default function AgentControlPanel({
                 className="hidden"
               />
               <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>{attachedCsvName ? `Replace CSV: ${attachedCsvName}` : '📎 Attach CSV / Dataset File'}</span>
+              <span>{attachedCsvName ? `Replace CSV: ${attachedCsvName}` : '📎 Attach CSV File'}</span>
             </label>
+
+            <a
+              href="/hallucination_test_dataset.csv"
+              download="hallucination_test_dataset.csv"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition-all"
+              title="Download specialized CSV dataset to test hallucination detection"
+            >
+              <Download className="w-3.5 h-3.5 text-amber-700" />
+              <span>Download Hallucination Test CSV</span>
+            </a>
 
             <a
               href="/sample_sales_data.csv"
               download="sample_sales_data.csv"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-all"
-              title="Download sample CSV dataset to test"
+              title="Download sample sales CSV dataset"
             >
               <Download className="w-3.5 h-3.5 text-blue-600" />
-              <span>Download Sample CSV</span>
+              <span>Download Sample Sales CSV</span>
             </a>
           </div>
 
