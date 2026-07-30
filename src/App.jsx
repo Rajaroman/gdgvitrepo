@@ -7,7 +7,7 @@ import MemoryInspector, { INITIAL_MEMORY_CHUNKS } from './components/MemoryInspe
 import GemmaShieldGuardrails from './components/GemmaShieldGuardrails';
 import KaggleExporter from './components/KaggleExporter';
 import { realVectorSearch, realExecutePythonCode, realAuditFactuality, realSynthesizeAgentResponse } from './utils/realAgentEngine';
-import { ShieldCheck, Trophy, Server } from 'lucide-react';
+import { ShieldCheck, Trophy, Bot, Sparkles } from 'lucide-react';
 
 const BACKEND_API_URL = "http://localhost:8000/api";
 
@@ -119,7 +119,7 @@ export default function App() {
         stepNumber: 1,
         confidence: 99,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Deconstructing prompt task: "${userQueryText}". Searching 768d vector store to retrieve grounded context. [Guardrail Similarity: ${similarityScore}%]`,
+        thought: `🤖 Agentic AI Goal Deconstruction: Deconstructing prompt task: "${userQueryText}". Searching 768d vector store for grounded context. [Guardrail Similarity: ${similarityScore}%]`,
         action: {
           tool: "vector_memory_rag",
           args: { query: userQueryText.substring(0, 60), top_k: 2 }
@@ -130,7 +130,7 @@ export default function App() {
         stepNumber: 2,
         confidence: realAudit.status === 'FLAGGED_HALLUCINATION' ? 45 : 96,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Analyzing retrieved context for "${userQueryText.substring(0, 30)}". Invoking web search tool to verify data points. [Guardrail Check: ${realAudit.status === 'FLAGGED_HALLUCINATION' ? 'Ungrounded Claim Flagged!' : 'Passed'}]`,
+        thought: `🛠️ Agentic Tool Dispatch: Invoking web search tool to verify data points for "${userQueryText.substring(0, 30)}". [Guardrail Check: ${realAudit.status === 'FLAGGED_HALLUCINATION' ? 'Ungrounded Claim Flagged!' : 'Passed'}]`,
         action: {
           tool: "web_search_google",
           args: { query: `${userQueryText.substring(0, 40)} latest specs` }
@@ -143,7 +143,7 @@ export default function App() {
         stepNumber: 3,
         confidence: 99,
         timestamp: new Date().toLocaleTimeString(),
-        thought: `Synthesizing context for "${userQueryText.substring(0, 30)}". Executing sandboxed Python code to compute numerical metrics requested in prompt.`,
+        thought: `🐍 Agentic Code Execution: Executing sandboxed Python code to compute numerical metrics for "${userQueryText.substring(0, 30)}".`,
         action: {
           tool: "python_interpreter",
           args: { code: pythonCodeSnippet }
@@ -153,7 +153,8 @@ export default function App() {
       {
         stepNumber: 4,
         confidence: realAudit.status === 'FLAGGED_HALLUCINATION' ? 50 : 99,
-        thought: `Cross-referencing all calculated outputs for "${userQueryText.substring(0, 30)}" against Gemma Shield Guardrails. Audit Status: ${realAudit.status}.`,
+        timestamp: new Date().toLocaleTimeString(),
+        thought: `🛡️ Agentic Factuality Verification: Cross-referencing all calculated outputs for "${userQueryText.substring(0, 30)}" against Gemma Shield Guardrails. Audit Status: ${realAudit.status}.`,
         action: null,
         observation: null
       }
@@ -243,27 +244,29 @@ export default function App() {
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 rounded-2xl text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md text-white border border-white/20">
-              <Trophy className="w-6 h-6 text-amber-300" />
+              <Bot className="w-6 h-6 text-amber-300 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider">Build with Gemma: GDG VIT Chennai</span>
                 <span className="text-white/60">•</span>
-                <span className="text-xs font-semibold text-blue-100">Track 1: Agents on a Mission</span>
+                <span className="text-xs font-semibold text-blue-100 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-300" /> Autonomous Agentic AI Workspace
+                </span>
               </div>
               <h2 className="text-xl font-extrabold text-white mt-1">
-                Gemma 4 ReAct Agent & Vector RAG Workspace
+                Gemma 4 Autonomous Agentic AI Engine & RAG Suite
               </h2>
               <p className="text-xs text-blue-100 mt-0.5">
-                Autonomous AI agent powered by Google DeepMind's Gemma 4 with Python subprocess sandboxing, FastAPI backend, vector RAG, and fact-grounding mitigation.
+                Multi-step ReAct agent reasoning, restricted Python subprocess sandbox, 768d vector RAG, and fact-grounding mitigation.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
             <div className="px-3.5 py-2 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 text-xs font-mono text-white font-bold flex items-center gap-2">
-              <Server className="w-4 h-4 text-emerald-300" />
-              FastAPI Python Backend Active
+              <ShieldCheck className="w-4 h-4 text-emerald-300" />
+              Agentic Engine Active
             </div>
           </div>
         </div>
