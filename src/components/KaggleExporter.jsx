@@ -37,9 +37,9 @@ Gemma 4 is anchored to domain knowledge using a **768-dimensional dense vector s
 
 ---
 
-## 🛡️ 3. Responsible AI & Anti-Hallucination Shield (Track 4 Integration)
+## 🛡️ 3. Responsible AI & Anti-Hallucination Shield
 
-To guarantee reliable open model deployments without hallucinations, our project integrates the **Gemma Shield Suite**:
+To guarantee reliable open model deployments without hallucinations, our project integrates the **Gemma Shield Suite** as a core safety layer inside the agent loop (not a separate submission):
 1. **Fact-Grounding Matrix**: Cross-references every generated numerical figure and entity against retrieved vector memory sources.
 2. **Real-Time Hallucination Risk Score**: Emits a 0–100% hallucination risk index per response step.
 3. **Prompt Injection & Sandboxed Execution Guardrails**: Scans code execution strings for unsafe imports or prompt injection attempts prior to execution.
@@ -86,12 +86,12 @@ To guarantee reliable open model deployments without hallucinations, our project
 
 ---
 
-## 🔗 6. Required Submission Attachments (Mandatory Submission Criteria)
+## 🔗 6. Attachments
 
-- **1. Kaggle Writeup**: Included in this report (&lt;1,500 words proof of technical work).
-- **2. Attached Public Code Repository**: [${repoUrl}](${repoUrl})
-- **3. Attached Live Demo**: [${demoUrl}](${demoUrl})
-- **4. Optional Clonable Notebook**: [${notebookUrl}](${notebookUrl})
+### Project Links
+- **Public Code Repository**: [${repoUrl}](${repoUrl})
+- **Live Demo**: [${demoUrl}](${demoUrl})
+- **Clonable Kaggle Notebook (optional)**: [${notebookUrl}](${notebookUrl})
 
 ---
 *Submitted for Build with Gemma AI Buildathon – GDG VIT Chennai 2026.*
@@ -120,7 +120,7 @@ To guarantee reliable open model deployments without hallucinations, our project
 
   return (
     <div className="bg-white p-6 rounded-2xl border-2 border-blue-600 shadow-2xl space-y-4">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <div className="flex items-center gap-3">
@@ -145,7 +145,7 @@ To guarantee reliable open model deployments without hallucinations, our project
           >
             <Download className="w-3.5 h-3.5" /> Download Writeup .md
           </button>
-          
+
           <button
             onClick={handleCopy}
             className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 hover:scale-[1.02]"
@@ -219,7 +219,7 @@ To guarantee reliable open model deployments without hallucinations, our project
       </div>
 
       {/* Markdown Preview */}
-      <div className="bg-slate-900 p-4.5 rounded-xl border border-slate-800 font-mono text-xs text-slate-100 max-h-80 overflow-y-auto whitespace-pre-wrap leading-relaxed shadow-inner">
+      <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-100 max-h-80 overflow-y-auto whitespace-pre-wrap leading-relaxed shadow-inner">
         {submissionMarkdown}
       </div>
 
