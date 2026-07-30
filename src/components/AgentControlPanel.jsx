@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, FileSpreadsheet, Paperclip, CheckCircle2 } from 'lucide-react';
+import { Play, RotateCcw, Sparkles, Code2, Search, Database, Globe, Command, FileSpreadsheet, Download, CheckCircle2 } from 'lucide-react';
 
 export const MISSION_PRESETS = [
   {
@@ -166,18 +166,30 @@ export default function AgentControlPanel({
           />
         </div>
 
-        {/* CSV Attachment Bar */}
-        <div className="flex items-center justify-between gap-2">
-          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold cursor-pointer transition-all">
-            <input
-              type="file"
-              accept=".csv,.txt"
-              onChange={handleCsvAttachment}
-              className="hidden"
-            />
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>{attachedCsvName ? `Replace CSV: ${attachedCsvName}` : '📎 Attach CSV / Dataset File'}</span>
-          </label>
+        {/* CSV Attachment & Sample Download Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold cursor-pointer transition-all">
+              <input
+                type="file"
+                accept=".csv,.txt"
+                onChange={handleCsvAttachment}
+                className="hidden"
+              />
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>{attachedCsvName ? `Replace CSV: ${attachedCsvName}` : '📎 Attach CSV / Dataset File'}</span>
+            </label>
+
+            <a
+              href="/sample_sales_data.csv"
+              download="sample_sales_data.csv"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition-all"
+              title="Download sample CSV dataset to test"
+            >
+              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <span>Download Sample CSV</span>
+            </a>
+          </div>
 
           {attachedCsvName && (
             <span className="text-xs font-mono text-emerald-700 font-bold flex items-center gap-1">
